@@ -1,6 +1,6 @@
 # ARIMA Forecasting — Modul Pembelajaran & Aplikasi Interaktif
 
-Aplikasi web lengkap untuk mempelajari dan menerapkan metode **ARIMA** dan **SARIMA** dalam memprediksi utilisasi sumber daya komputasi (CPU, Memory, Disk). Terdiri dari dua bagian utama: **modul teori interaktif** dan **aplikasi forecasting berbasis upload CSV**.
+Aplikasi web untuk memprediksi utilisasi sumber daya komputasi (CPU, Memory, Storage) menggunakan model **ARIMA** dan **SARIMA**. Tersedia dalam dua varian: **aplikasi saja** dan **aplikasi + modul pembelajaran interaktif**.
 
 ---
 
@@ -25,24 +25,24 @@ Aplikasi web lengkap untuk mempelajari dan menerapkan metode **ARIMA** dan **SAR
 
 ## Gambaran Umum
 
-Aplikasi ini dibangun sebagai sarana pembelajaran dan eksplorasi metode *time series forecasting* dengan konteks nyata: memprediksi utilisasi infrastruktur TI. Pengguna dapat membaca modul teori yang komprehensif, kemudian langsung mencoba forecasting dengan data CSV mereka sendiri tanpa perlu menulis kode.
+Aplikasi ini dibangun sebagai sarana pembelajaran dan eksplorasi metode *time series forecasting* dengan konteks nyata: memprediksi utilisasi infrastruktur TI. Pengguna dapat membaca modul teori yang komprehensif (varian full), kemudian langsung mencoba forecasting dengan data CSV mereka sendiri tanpa perlu menulis kode.
 
 **Alur penggunaan:**
 
 ```
-Upload CSV → Pilih Metrik → Tentukan Periode → Proses → Lihat Grafik & Metrik Evaluasi → Ekspor Hasil
+Upload CSV → Pilih Metrik → Tentukan Periode → Proses → Lihat Dashboard Hasil → Ekspor
 ```
 
 ---
 
 ## Fitur
 
-### Modul Pembelajaran
+### Modul Pembelajaran *(hanya varian full)*
 
 | BAB | Topik |
 |-----|-------|
 | BAB I | Pendahuluan — latar belakang dan tujuan penelitian |
-| BAB II | Landasan Teori — Time Series, ARIMA, SARIMA, ADF Test, Auto ARIMA, Metrik Evaluasi, Docker |
+| BAB II | Landasan Teori — Time Series, ARIMA, SARIMA, ADF Test, Auto ARIMA, Metrik Evaluasi |
 | BAB III | Metodologi — tahapan penelitian dan alur kerja |
 | BAB IV | Implementasi — detail teknis sistem |
 | BAB V | Kesimpulan dan rekomendasi |
@@ -50,14 +50,14 @@ Upload CSV → Pilih Metrik → Tentukan Periode → Proses → Lihat Grafik & M
 ### Aplikasi Forecasting
 
 - **Upload CSV** dengan drag-and-drop
-- **Pilih metrik**: CPU, Memory, atau Storage (multi-select, diproses paralel)
-- **Periode prediksi**: 1–60 bulan ke depan via slider + input angka, dengan disclaimer akurasi
+- **Multi-metrik**: pilih CPU, Memory, dan/atau Storage — diproses paralel
+- **Periode prediksi**: 1–60 bulan via slider + input angka, dengan indikator akurasi
 - **Auto ARIMA/SARIMA**: parameter dipilih otomatis menggunakan `pmdarima`
-- **Grafik interaktif**: data historis + hasil prediksi + confidence interval 95%
-- **Tab switching** antar metrik (grafik & tabel terpisah per metrik)
+- **Dashboard interaktif**: KPI strip, grafik dengan CI 95%, panel diagnostik
+- **Penjelasan lompatan forecast**: notifikasi otomatis jika ada deviasi signifikan di awal forecast
 - **Diagnostik model**: order `(p,d,q)`, seasonal order `(P,D,Q,m)`, AIC, BIC, ADF Test
 - **Evaluasi performa**: MAPE, RMSE, MAE — dengan penjelasan jika metrik kosong
-- **Ekspor CSV**: unduh hasil forecast beserta batas interval
+- **Ekspor CSV**: unduh tabel hasil forecast beserta batas interval
 - **Ekspor PDF**: laporan lengkap beserta grafik forecast tertanam
 - **Dark mode**: toggle terang/gelap, tersimpan di `localStorage`
 
@@ -71,9 +71,9 @@ Upload CSV → Pilih Metrik → Tentukan Periode → Proses → Lihat Grafik & M
 └─────────────────────┬───────────────────────────────┘
                       │ HTTP (port 3000)
 ┌─────────────────────▼───────────────────────────────┐
-│              Frontend (Next.js 15)                  │
-│  - Halaman Modul (SSR/CSR)                          │
-│  - Aplikasi Forecasting (CSR)                       │
+│              Frontend (Next.js)                     │
+│  - Aplikasi Forecasting Dashboard (CSR)             │
+│  - Halaman Modul (SSR) — varian full saja           │
 │  - Komponen Chart (Recharts)                        │
 │  - Render rumus matematika (KaTeX)                  │
 └─────────────────────┬───────────────────────────────┘
@@ -96,28 +96,32 @@ Upload CSV → Pilih Metrik → Tentukan Periode → Proses → Lihat Grafik & M
 ```
 arima-forecasting-app/
 ├── frontend/                        # Aplikasi Next.js
+│   ├── public/                      # Aset statis publik
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── layout.tsx           # Layout root (Navbar)
-│   │   │   ├── page.tsx             # Halaman beranda
+│   │   │   ├── layout.tsx           # Layout root + ThemeProvider
+│   │   │   ├── page.tsx             # Halaman beranda (varian full)
 │   │   │   ├── globals.css          # CSS global & kelas prose-custom
 │   │   │   ├── aplikasi/
-│   │   │   │   ├── page.tsx         # Halaman aplikasi forecasting
+│   │   │   │   ├── page.tsx         # Dashboard forecasting
 │   │   │   │   └── components/
-│   │   │   │       └── ForecastChart.tsx  # Komponen grafik Recharts
-│   │   │   └── modul/
-│   │   │       ├── layout.tsx       # Layout sidebar modul
-│   │   │       ├── page.tsx         # Gambaran umum modul
-│   │   │       ├── pendahuluan/     # BAB I
-│   │   │       ├── landasan-teori/  # BAB II
-│   │   │       ├── metodologi/      # BAB III
-│   │   │       ├── implementasi/    # BAB IV
-│   │   │       └── kesimpulan/      # BAB V
+│   │   │   │       └── ForecastChart.tsx
+│   │   │   └── modul/               # Modul pembelajaran (varian full)
+│   │   │       ├── layout.tsx
+│   │   │       ├── page.tsx
+│   │   │       ├── pendahuluan/
+│   │   │       ├── landasan-teori/
+│   │   │       ├── metodologi/
+│   │   │       ├── implementasi/
+│   │   │       └── kesimpulan/
 │   │   ├── components/
 │   │   │   └── layout/
-│   │   │       └── Navbar.tsx       # Navigasi atas
+│   │   │       ├── Navbar.tsx       # Navigasi atas + dark mode toggle
+│   │   │       └── ThemeProvider.tsx
+│   │   ├── middleware.ts            # Route guard (app-only vs full)
 │   │   └── lib/
-│   │       └── api.ts               # Fungsi HTTP client ke backend
+│   │       └── api.ts               # HTTP client ke backend
+│   ├── Dockerfile                   # Multi-stage build
 │   ├── next.config.ts
 │   ├── postcss.config.mjs
 │   └── package.json
@@ -131,11 +135,13 @@ arima-forecasting-app/
 │   │   │   ├── arima_engine.py      # Logika Auto ARIMA & forecasting
 │   │   │   └── evaluation.py        # Fungsi MAPE, RMSE, MAE
 │   │   └── models/
-│   │       └── schemas.py           # Pydantic request/response schemas
+│   │       └── schemas.py           # Pydantic schemas
 │   ├── Dockerfile
 │   └── requirements.txt
 │
-├── docker-compose.yml               # Orkestrasi multi-container
+├── docker-compose.yml               # Varian app-only
+├── docker-compose.full.yml          # Varian full (+ modul)
+├── data_dummy.csv                   # Contoh data CSV untuk pengujian
 └── README.md
 ```
 
@@ -155,8 +161,9 @@ arima-forecasting-app/
 
 | Kebutuhan | Versi Minimum |
 |-----------|--------------|
-| Docker    | >= 24        |
-| Docker Compose | >= 2.20 |
+| Docker Desktop | >= 4.0 (includes Compose v2) |
+
+> **Windows:** Pastikan **Docker Desktop sudah berjalan** (ikon paus di system tray aktif) sebelum menjalankan perintah `docker compose`. Docker Desktop menggunakan backend WSL 2 — jika baru diinstall, restart komputer terlebih dahulu.
 
 ---
 
@@ -164,9 +171,10 @@ arima-forecasting-app/
 
 ### Mode Development (Lokal)
 
-#### 1. Clone atau masuk ke direktori proyek
+#### 1. Clone repositori
 
 ```bash
+git clone https://github.com/fachrifer/arima-forecasting-app.git
 cd arima-forecasting-app
 ```
 
@@ -174,94 +182,108 @@ cd arima-forecasting-app
 
 ```bash
 cd backend
+```
 
-# Buat virtual environment
+**macOS / Linux:**
+```bash
 python -m venv .venv
-
-# Aktifkan virtual environment
-source .venv/bin/activate          # macOS / Linux
-# .venv\Scripts\activate           # Windows
-
-# Install dependensi Python
+source .venv/bin/activate
 pip install -r requirements.txt
-
-# Jalankan server backend
 uvicorn app.main:app --reload --port 8000
 ```
 
-Backend akan berjalan di: `http://localhost:8000`  
-Dokumentasi API interaktif (Swagger): `http://localhost:8000/docs`
+**Windows (PowerShell):**
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
 
-#### 3. Jalankan Frontend (terminal baru)
+Backend berjalan di: `http://localhost:8000`  
+Swagger UI: `http://localhost:8000/docs`
+
+#### 3. Jalankan Frontend *(terminal baru)*
 
 ```bash
 cd frontend
-
-# Install dependensi Node.js
 npm install
-
-# Jalankan development server
 npm run dev
 ```
 
-Frontend akan berjalan di: `http://localhost:3000`
+Frontend berjalan di: `http://localhost:3000`
 
-> **Catatan:** Frontend secara default mengarah ke backend di `http://localhost:8000`. Jika port backend berbeda, ubah variabel `NEXT_PUBLIC_API_URL` (lihat bagian [Konfigurasi](#konfigurasi)).
+> **Catatan:** Pada mode development, **semua halaman** (termasuk `/modul`) selalu tampil karena `NEXT_PUBLIC_INCLUDE_MODUL` belum di-set. Perilaku dua varian hanya aktif saat build Docker.
 
 ---
 
 ### Mode Production (Docker)
 
-Tersedia **dua varian image** frontend:
+Tersedia **dua varian image** frontend yang dikontrol lewat build arg `NEXT_PUBLIC_INCLUDE_MODUL`:
 
-| Varian | File Compose | Isi |
-|--------|-------------|-----|
-| **App-only** | `docker-compose.yml` | Hanya aplikasi forecasting (`/aplikasi`), tanpa halaman modul |
-| **Full** | `docker-compose.full.yml` | Aplikasi forecasting + seluruh modul pembelajaran (`/modul`) |
+| Varian | File Compose | Halaman tersedia | Perilaku `/` |
+|--------|-------------|-----------------|-------------|
+| **App-only** | `docker-compose.yml` | `/aplikasi` saja | Langsung buka Aplikasi |
+| **Full** | `docker-compose.full.yml` | `/aplikasi` + `/modul/*` | Buka Beranda |
 
-#### Image 1 — App-only (tanpa modul)
+#### Langkah-langkah
+
+**1. Pastikan Docker Desktop berjalan**
+
+Buka Docker Desktop dan tunggu hingga status menunjukkan *"Docker Desktop is running"* (ikon paus berhenti beranimasi di system tray).
+
+Verifikasi:
+```bash
+docker info
+```
+Jika tidak ada error, Docker siap digunakan.
+
+**2. Clone repositori** *(jika belum)*
 
 ```bash
-# Dari root direktori proyek
+git clone https://github.com/fachrifer/arima-forecasting-app.git
+cd arima-forecasting-app
+```
+
+**3a. Build & jalankan — Image App-only** *(tanpa modul)*
+
+```bash
 docker compose up --build
 ```
 
-#### Image 2 — Full (dengan modul pembelajaran)
+**3b. Build & jalankan — Image Full** *(dengan modul pembelajaran)*
 
 ```bash
 docker compose -f docker-compose.full.yml up --build
 ```
 
-Perbedaan antara kedua image ditentukan oleh build arg `NEXT_PUBLIC_INCLUDE_MODUL` yang
-disisipkan saat `npm run build`. Nilai ini di-*bake* ke dalam bundle statis Next.js,
-sehingga kedua image menghasilkan binary yang berbeda.
+> Build pertama membutuhkan waktu sekitar **5–15 menit** karena mengunduh base image dan mengkompilasi dependensi Python (`statsmodels`, `pmdarima`). Build selanjutnya jauh lebih cepat karena cache layer.
 
-Setelah berhasil (keduanya sama):
+**4. Akses aplikasi**
 
 | Layanan | URL |
 |---------|-----|
-| Frontend (Aplikasi Web) | http://localhost:3000 |
+| Aplikasi Web | http://localhost:3000 |
 | Backend API | http://localhost:8000 |
 | Swagger API Docs | http://localhost:8000/docs |
 
-Untuk menghentikan container:
+**5. Hentikan container**
 
 ```bash
+# App-only:
 docker compose down
-# atau untuk full:
+
+# Full:
 docker compose -f docker-compose.full.yml down
 ```
 
-Jalankan di background:
+**Jalankan di background** *(tanpa log di terminal)*:
 
 ```bash
 docker compose up --build -d
 docker compose -f docker-compose.full.yml up --build -d
-```
 
-Lihat log:
-
-```bash
+# Lihat log:
 docker compose logs -f
 ```
 
@@ -271,54 +293,58 @@ docker compose logs -f
 
 File CSV yang diunggah harus memiliki format berikut:
 
-| Kolom     | Tipe       | Deskripsi                                  | Contoh         |
-|-----------|------------|--------------------------------------------|----------------|
-| `Tanggal` | Date       | Tanggal observasi (format: `DD/MM/YYYY` atau `YYYY-MM-DD`) | `01/01/2022`   |
-| `CPU`     | Float (%)  | Persentase penggunaan CPU                  | `72.5`         |
-| `Memory`  | Float (%)  | Persentase penggunaan memori               | `68.3`         |
-| `Storage` | Float      | Penggunaan disk (GB atau TB, konsisten)    | `1.24`         |
+| Kolom | Tipe | Deskripsi | Contoh |
+|-------|------|-----------|--------|
+| `Tanggal` | Date | Tanggal observasi (`DD/MM/YYYY` atau `YYYY-MM-DD`) | `01/01/2022` |
+| `CPU` | Float (%) | Persentase penggunaan CPU | `72.5` |
+| `Memory` | Float (GB/TB) | Penggunaan memori | `128.5` |
+| `Storage` | Float (GB/TB) | Penggunaan disk | `820.3` |
 
 **Contoh isi file CSV:**
 
 ```csv
 Tanggal,CPU,Memory,Storage
-01/01/2022,65.2,58.1,1.10
-01/02/2022,68.7,61.3,1.15
-01/03/2022,70.1,63.0,1.21
-01/04/2022,72.5,64.8,1.24
-...
+01/01/2022,65.2,128.1,820.1
+01/02/2022,68.7,131.3,825.5
+01/03/2022,70.1,133.0,831.2
+01/04/2022,72.5,134.8,838.4
 ```
 
-**Ketentuan data:**
+**Ketentuan:**
+- Minimal **kolom `Tanggal` + satu kolom metrik**
 - Minimal **6 baris data** agar model dapat dilatih
-- Untuk mengaktifkan model **SARIMA** (musiman), dibutuhkan minimal **24 baris** (2 tahun data bulanan)
-- Data akan diurutkan otomatis berdasarkan kolom `Tanggal`
-- Nilai kosong (`NaN`) pada metrik yang dipilih akan dihapus secara otomatis
+- Minimal **24 baris** untuk mengaktifkan SARIMA (pola musiman)
+- Data diurutkan otomatis berdasarkan `Tanggal`
+- Nilai kosong (`NaN`) dihapus otomatis
+
+File `data_dummy.csv` di root repositori dapat digunakan untuk pengujian awal.
 
 ---
 
 ## Cara Menggunakan Aplikasi
 
-1. **Buka halaman Aplikasi** melalui menu navigasi atas atau tombol "Coba Aplikasi" di beranda.
+1. **Buka** `http://localhost:3000` — pada image app-only, langsung masuk ke halaman Aplikasi.
 
-2. **Unggah file CSV**: seret file ke area upload atau klik untuk memilih file dari komputer.
+2. **Unggah file CSV**: seret file ke area upload atau klik untuk memilih. Klik accordion "Format CSV yang diperlukan" untuk melihat struktur yang diharapkan.
 
-3. **Pilih Metrik**: klik salah satu dari tiga tombol — CPU, Memory, atau Storage — sesuai data yang ingin di-forecast.
+3. **Pilih Metrik**: klik satu atau lebih dari CPU / Memory / Storage. Setiap metrik diproses secara paralel.
 
-4. **Tentukan Periode Prediksi**: geser slider untuk memilih horizon prediksi antara 1 hingga 5 tahun.
+4. **Tentukan Periode Prediksi**: geser slider atau ketik angka (1–60 bulan). Indikator warna menunjukkan tingkat akurasi:
+   - 🟢 Hijau: ≤ 12 bulan (akurasi tinggi)
+   - 🟡 Kuning: ≤ 24 bulan (akurasi sedang)
+   - 🔴 Merah: > 24 bulan (akurasi rendah)
 
-5. **Klik "Proses Forecast"**: sistem akan:
-   - Melakukan uji stasioneritas (ADF Test)
-   - Mencari parameter ARIMA/SARIMA terbaik secara otomatis
-   - Menghitung prediksi beserta confidence interval 95%
-   - Mengevaluasi akurasi pada 20% data terakhir (test set)
+5. **Klik "Jalankan Forecast"**: sistem akan menjalankan ADF Test → Auto ARIMA/SARIMA → Evaluasi → mengembalikan hasil.
 
-6. **Analisis hasil**:
-   - **Grafik**: garis biru = data historis, garis ungu = prediksi, area biru muda = interval kepercayaan
-   - **Diagnostik Model**: order `(p,d,q)` yang dipilih, AIC/BIC, dan status stasioneritas data
-   - **Evaluasi**: nilai MAPE (akurasi utama), RMSE, dan MAE
+6. **Analisis Dashboard**:
+   - **KPI Strip**: ringkasan nilai historis terakhir, forecast pertama/terakhir, delta, dan MAPE
+   - **Grafik**: garis abu = historis, garis putus-putus berwarna = forecast, area transparan = CI 95%
+   - **Panel Diagnostik**: order model, AIC/BIC, status stasioneritas
+   - **Evaluasi**: MAPE (kualitas forecast), RMSE, MAE
 
-7. **Ekspor CSV**: klik tombol "Ekspor CSV" untuk mengunduh tabel hasil forecast.
+7. **Ekspor hasil**:
+   - **CSV**: klik "Ekspor CSV" di bagian Tabel Data Forecast
+   - **PDF**: klik "PDF" di header dashboard metrik
 
 ---
 
@@ -326,17 +352,17 @@ Tanggal,CPU,Memory,Storage
 
 ### `POST /api/forecast`
 
-Endpoint utama untuk menjalankan forecasting.
+Menjalankan forecasting untuk satu metrik.
 
-**Request** (multipart/form-data):
+**Request** (`multipart/form-data`):
 
-| Field           | Tipe    | Wajib | Deskripsi                                      |
-|-----------------|---------|-------|------------------------------------------------|
-| `file`          | File    | Ya    | File CSV dengan kolom Tanggal, CPU/Memory/Storage |
-| `metric`        | String  | Ya    | Salah satu dari: `CPU`, `Memory`, `Storage`    |
-| `forecast_years`| Integer | Ya    | Jumlah tahun prediksi (1–5)                    |
+| Field | Tipe | Wajib | Deskripsi |
+|-------|------|-------|-----------|
+| `file` | File | Ya | File CSV |
+| `metric` | String | Ya | `CPU`, `Memory`, atau `Storage` |
+| `forecast_months` | Integer | Ya | Jumlah bulan prediksi (1–60) |
 
-**Response** (JSON):
+**Response** (`application/json`):
 
 ```json
 {
@@ -344,7 +370,7 @@ Endpoint utama untuk menjalankan forecasting.
     { "date": "2022-01-01", "value": 65.2, "lower_ci": null, "upper_ci": null }
   ],
   "forecast": [
-    { "date": "2024-01-01", "value": 75.4, "lower_ci": 70.1, "upper_ci": 80.7 }
+    { "date": "2025-01-01", "value": 75.4, "lower_ci": 70.1, "upper_ci": 80.7 }
   ],
   "diagnostics": {
     "order": [1, 1, 1],
@@ -368,16 +394,14 @@ Endpoint utama untuk menjalankan forecasting.
 
 | Status | Penyebab |
 |--------|----------|
-| `400`  | File bukan CSV, kolom tidak ditemukan, data terlalu sedikit (< 6 baris), nilai `metric` atau `forecast_years` tidak valid |
-| `500`  | Kegagalan internal saat menjalankan model ARIMA |
+| `400` | Bukan CSV, kolom tidak ditemukan, data < 6 baris, nilai parameter tidak valid |
+| `500` | Kegagalan internal saat menjalankan model |
 
 ---
 
 ### `GET /api/health`
 
 Cek status backend.
-
-**Response:**
 
 ```json
 { "status": "healthy" }
@@ -387,30 +411,32 @@ Cek status backend.
 
 ## Konfigurasi
 
-### Variabel Environment Frontend
+### Variabel Build Frontend
 
-| Variabel              | Default                  | Deskripsi                             |
-|-----------------------|--------------------------|---------------------------------------|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000`  | URL base backend API                  |
+| Variabel | Default | Deskripsi |
+|----------|---------|-----------|
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | URL backend yang dipanggil browser |
+| `NEXT_PUBLIC_INCLUDE_MODUL` | `false` | `true` = aktifkan halaman modul |
 
-Untuk development lokal, buat file `frontend/.env.local`:
+Untuk **development lokal** (opsional), buat `frontend/.env.local`:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_INCLUDE_MODUL=true
 ```
 
-Untuk Docker, nilai ini sudah dikonfigurasi di `docker-compose.yml`:
+Untuk **Docker**, kedua variabel sudah dikonfigurasi di masing-masing file compose.
 
-```yaml
-args:
-  NEXT_PUBLIC_API_URL: http://localhost:8000
-```
+> **Deploy ke server remote:** Ubah `NEXT_PUBLIC_API_URL` di `docker-compose.yml` / `docker-compose.full.yml` menjadi IP atau domain server:
+> ```yaml
+> NEXT_PUBLIC_API_URL: http://192.168.1.100:8000
+> ```
 
 ### Variabel Environment Backend
 
-| Variabel          | Default | Deskripsi                            |
-|-------------------|---------|--------------------------------------|
-| `PYTHONUNBUFFERED`| `1`     | Nonaktifkan buffering log Python     |
+| Variabel | Default | Deskripsi |
+|----------|---------|-----------|
+| `PYTHONUNBUFFERED` | `1` | Nonaktifkan buffering log Python |
 
 ---
 
@@ -418,91 +444,127 @@ args:
 
 ### Frontend
 
-| Library | Versi | Fungsi |
-|---------|-------|--------|
-| [Next.js](https://nextjs.org) | 15 | Framework React dengan App Router |
-| [React](https://react.dev) | 19 | UI library |
-| [TypeScript](https://typescriptlang.org) | 5 | Type safety |
-| [Tailwind CSS](https://tailwindcss.com) | 4 | Styling utility-first |
-| [Recharts](https://recharts.org) | 2 | Grafik interaktif |
-| [KaTeX](https://katex.org) | - | Render rumus matematika LaTeX |
-| [react-katex](https://github.com/talyssonoc/react-katex) | - | Komponen React untuk KaTeX |
-| [react-dropzone](https://react-dropzone.js.org) | - | Upload file drag-and-drop |
-| [papaparse](https://www.papaparse.com) | - | Parse/export CSV di browser |
-| [lucide-react](https://lucide.dev) | - | Ikon SVG |
+| Library | Fungsi |
+|---------|--------|
+| Next.js 16 | Framework React, App Router, standalone build |
+| React 19 | UI library |
+| TypeScript 5 | Type safety |
+| Tailwind CSS 4 | Styling utility-first |
+| Recharts | Grafik interaktif (ComposedChart) |
+| KaTeX + react-katex | Render rumus matematika LaTeX |
+| react-dropzone | Upload file drag-and-drop |
+| papaparse | Parse & export CSV di browser |
+| jspdf + html2canvas | Export laporan PDF dengan gambar chart |
+| lucide-react | Ikon SVG |
+| react-syntax-highlighter | Highlight kode di modul |
 
 ### Backend
 
-| Library | Versi | Fungsi |
-|---------|-------|--------|
-| [FastAPI](https://fastapi.tiangolo.com) | 0.115+ | Framework API async |
-| [Python](https://python.org) | 3.11+ | Runtime |
-| [pandas](https://pandas.pydata.org) | - | Manipulasi data & time series |
-| [numpy](https://numpy.org) | - | Komputasi numerik |
-| [statsmodels](https://statsmodels.org) | - | Uji statistik (ADF Test) |
-| [pmdarima](https://alkaline-ml.com/pmdarima) | - | Auto ARIMA / SARIMA |
-| [uvicorn](https://uvicorn.org) | - | ASGI web server |
-| [pydantic](https://docs.pydantic.dev) | v2 | Validasi data & schemas |
+| Library | Fungsi |
+|---------|--------|
+| FastAPI | Framework API async |
+| Python 3.11+ | Runtime |
+| pandas | Manipulasi data time series |
+| numpy | Komputasi numerik |
+| statsmodels | Uji ADF (stasioneritas) |
+| pmdarima | Auto ARIMA / SARIMA |
+| uvicorn | ASGI web server |
+| pydantic v2 | Validasi data & schemas |
 
 ### Infrastruktur
 
 | Alat | Fungsi |
 |------|--------|
-| [Docker](https://docker.com) | Containerization |
-| [Docker Compose](https://docs.docker.com/compose) | Orkestrasi multi-container |
+| Docker | Containerization |
+| Docker Compose v2 | Orkestrasi multi-container |
 
 ---
 
 ## Troubleshooting
 
-### Frontend tidak bisa terhubung ke backend
+### Docker Desktop tidak berjalan (Windows)
 
-**Gejala:** Error "Failed to fetch" atau "Network Error" saat klik "Proses Forecast"
+**Gejala:** `open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified`
 
 **Solusi:**
-1. Pastikan backend sudah berjalan: buka `http://localhost:8000/api/health` di browser — harus mengembalikan `{"status":"healthy"}`
-2. Periksa variabel `NEXT_PUBLIC_API_URL` di `frontend/.env.local` sudah mengarah ke URL backend yang benar
-3. Jika menggunakan Docker, pastikan kedua container sudah running: `docker compose ps`
+1. Buka **Docker Desktop** dari Start Menu
+2. Tunggu hingga ikon paus di system tray berhenti beranimasi
+3. Jalankan `docker info` untuk verifikasi
+4. Jika masih error: klik kanan ikon Docker → **Restart**
+5. Jika WSL 2 perlu update: ikuti petunjuk yang muncul di Docker Desktop
+
+---
+
+### Frontend tidak bisa terhubung ke backend
+
+**Gejala:** Error "Failed to fetch" saat klik "Jalankan Forecast"
+
+**Solusi:**
+1. Cek backend: buka `http://localhost:8000/api/health` → harus mengembalikan `{"status":"healthy"}`
+2. Pastikan kedua container jalan: `docker compose ps`
+3. Periksa `NEXT_PUBLIC_API_URL` sudah mengarah ke URL backend yang benar
 
 ---
 
 ### Error "Time series must have at least 6 data points"
 
-**Penyebab:** Data CSV terlalu sedikit atau banyak nilai kosong pada kolom yang dipilih.
+**Penyebab:** CSV terlalu sedikit data atau banyak nilai kosong.
 
-**Solusi:** Pastikan CSV memiliki minimal 6 baris data yang valid (tidak kosong) pada kolom metrik yang dipilih.
+**Solusi:** Pastikan ada minimal 6 baris valid pada kolom metrik yang dipilih. Gunakan `data_dummy.csv` sebagai referensi format.
+
+---
+
+### Metrik evaluasi (MAPE/RMSE/MAE) kosong
+
+**Penyebab:** Evaluasi menggunakan *train/test split* (80%/20%). Jika model gagal pada subset train (data tidak cukup atau tidak stasioner), metrik tidak dapat dihitung.
+
+**Solusi:** Tambahkan lebih banyak data historis. Minimal 24 baris untuk hasil yang optimal.
 
 ---
 
 ### SARIMA tidak aktif, hanya ARIMA biasa
 
-**Penyebab:** Data kurang dari 24 baris (kurang dari 2 tahun data bulanan).
+**Penyebab:** Data kurang dari 24 baris.
 
-**Penjelasan:** SARIMA membutuhkan setidaknya 2 siklus musiman penuh untuk mendeteksi pola. Dengan data < 24 bulan, sistem otomatis fallback ke ARIMA non-musiman.
+**Penjelasan:** SARIMA membutuhkan setidaknya 2 siklus musiman penuh. Sistem otomatis *fallback* ke ARIMA non-musiman jika data < 24 bulan.
 
 ---
 
-### Build Docker gagal (timeout saat install Python packages)
+### Build Docker lambat / timeout saat install Python packages
 
-**Penyebab:** Package seperti `statsmodels` dan `pmdarima` cukup besar.
+**Penyebab:** `statsmodels` dan `pmdarima` cukup besar dan perlu dikompilasi.
 
 **Solusi:**
 ```bash
-# Tambahkan timeout yang lebih lama
-DOCKER_BUILDKIT=1 docker compose build --progress=plain
+# Tampilkan progress detail untuk monitoring
+docker compose build --progress=plain
+
+# Jika timeout, coba ulang — layer sudah ter-cache sebagian
+docker compose up --build
 ```
 
 ---
 
 ### Port sudah digunakan
 
-**Gejala:** Error `address already in use` saat menjalankan Docker atau server lokal.
+**Gejala:** `address already in use` saat menjalankan Docker atau server lokal.
 
-**Solusi:**
+**Solusi (macOS/Linux):**
 ```bash
-# Cek proses yang menggunakan port 3000 atau 8000
 lsof -i :3000
 lsof -i :8000
+```
 
-# Hentikan proses tersebut, atau ubah port di docker-compose.yml
+**Solusi (Windows PowerShell):**
+```powershell
+netstat -ano | findstr :3000
+netstat -ano | findstr :8000
+# Catat PID, lalu:
+taskkill /PID <pid> /F
+```
+
+Atau ubah port di `docker-compose.yml`:
+```yaml
+ports:
+  - "3001:3000"   # akses via localhost:3001
 ```
