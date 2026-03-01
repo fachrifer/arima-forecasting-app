@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f8fafc;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+}
+
+/* ── KaTeX math rendering ─────────────────────────────── */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+/* ── Prose / materi styling ───────────────────────────── */
+.prose-custom {
+  line-height: 1.8;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.prose-custom h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: #0f172a;
+}
+
+.prose-custom h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid #e2e8f0;
+  color: #0f172a;
+}
+
+.prose-custom h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #1e293b;
+}
+
+.prose-custom p {
+  margin-bottom: 1rem;
+  color: #1e293b;
+}
+
+.prose-custom ul,
+.prose-custom ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  color: #1e293b;
+}
+
+.prose-custom ul {
+  list-style-type: disc;
+}
+
+.prose-custom ol {
+  list-style-type: decimal;
+}
+
+.prose-custom li {
+  margin-bottom: 0.35rem;
+  color: #1e293b;
+}
+
+.prose-custom table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.prose-custom th,
+.prose-custom td {
+  padding: 0.6rem 1rem;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
+.prose-custom th {
+  background-color: #f1f5f9;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.prose-custom tr:nth-child(even) td {
+  background-color: #f8fafc;
+}
+
+.prose-custom blockquote {
+  border-left: 4px solid #6366f1;
+  padding: 0.75rem 1.25rem;
+  margin: 1.5rem 0;
+  background-color: #eef2ff;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: #3730a3;
+  font-style: italic;
+}
+
+.prose-custom code {
+  background-color: #f1f5f9;
+  border-radius: 0.25rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.875rem;
+  color: #be185d;
+  font-family: "Geist Mono", monospace;
+}
