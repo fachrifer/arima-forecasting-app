@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api", tags=["forecast"])
 async def forecast(
     file: UploadFile = File(...),
     metric: str = Form(...),
-    forecast_years: int = Form(...),
+    forecast_months: int = Form(...),
 ):
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are accepted")
@@ -25,8 +25,8 @@ async def forecast(
             detail=f"Invalid metric '{metric}'. Must be one of {valid_metrics}",
         )
 
-    if forecast_years < 1:
-        raise HTTPException(status_code=400, detail="forecast_years must be >= 1")
+    if forecast_months < 1:
+        raise HTTPException(status_code=400, detail="forecast_months must be >= 1")
 
     try:
         contents = await file.read()
@@ -45,10 +45,9 @@ async def forecast(
     df.set_index("Tanggal", inplace=True)
 
     ts = df[metric].dropna()
-    forecast_period = forecast_years * 12
 
     try:
-        result = run_full_forecast(ts, forecast_period=forecast_period, seasonal=True)
+        result = run_full_forecast(ts, forecast_period=forecast_months, seasonal=True)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

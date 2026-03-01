@@ -52,7 +52,7 @@ export default function ModulOverviewPage() {
         Modul Pembelajaran: Forecasting ARIMA &amp; SARIMA
       </h1>
 
-      <p className="text-lg text-slate-600">
+      <p className="text-lg text-slate-600 dark:text-slate-400">
         Modul ini membahas teori dan implementasi metode{" "}
         <strong>ARIMA (AutoRegressive Integrated Moving Average)</strong> dan{" "}
         <strong>SARIMA (Seasonal ARIMA)</strong> untuk forecasting penggunaan
@@ -66,15 +66,15 @@ export default function ModulOverviewPage() {
           <Link
             key={href}
             href={href}
-            className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md no-underline"
+            className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md no-underline dark:hover:border-indigo-700"
           >
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-100">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-100 dark:bg-indigo-950 dark:text-indigo-400 dark:group-hover:bg-indigo-900">
               <Icon className="h-5 w-5" />
             </div>
-            <h3 className="!mt-0 !mb-1 text-base font-semibold text-slate-900">
+            <h3 className="!mt-0 !mb-1 text-base font-semibold text-slate-900 dark:text-slate-100">
               {title}
             </h3>
-            <p className="!mb-0 text-sm text-slate-500">{description}</p>
+            <p className="!mb-0 text-sm text-slate-500 dark:text-slate-400">{description}</p>
           </Link>
         ))}
       </div>

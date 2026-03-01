@@ -1,16 +1,28 @@
 @import "katex/dist/katex.min.css";
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-alt: #f8fafc;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --muted: #94a3b8;
+  --muted-fg: #64748b;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-  }
+.dark {
+  --background: #0f111a;
+  --foreground: #e2e8f0;
+  --surface: #1a1d2e;
+  --surface-alt: #1e2235;
+  --border: #2a2f45;
+  --border-light: #232840;
+  --muted: #64748b;
+  --muted-fg: #94a3b8;
 }
 
 body {
@@ -33,12 +45,20 @@ body {
   color: #0f172a;
 }
 
+.dark .prose-custom {
+  color: #e2e8f0;
+}
+
 .prose-custom h1 {
   font-size: 1.75rem;
   font-weight: 800;
   margin-top: 2.5rem;
   margin-bottom: 1rem;
   color: #0f172a;
+}
+
+.dark .prose-custom h1 {
+  color: #f1f5f9;
 }
 
 .prose-custom h2 {
@@ -51,6 +71,11 @@ body {
   color: #0f172a;
 }
 
+.dark .prose-custom h2 {
+  border-bottom-color: #2a2f45;
+  color: #f1f5f9;
+}
+
 .prose-custom h3 {
   font-size: 1.1rem;
   font-weight: 600;
@@ -59,9 +84,17 @@ body {
   color: #1e293b;
 }
 
+.dark .prose-custom h3 {
+  color: #cbd5e1;
+}
+
 .prose-custom p {
   margin-bottom: 1rem;
   color: #1e293b;
+}
+
+.dark .prose-custom p {
+  color: #cbd5e1;
 }
 
 .prose-custom ul,
@@ -69,6 +102,11 @@ body {
   margin-left: 1.5rem;
   margin-bottom: 1rem;
   color: #1e293b;
+}
+
+.dark .prose-custom ul,
+.dark .prose-custom ol {
+  color: #cbd5e1;
 }
 
 .prose-custom ul {
@@ -82,6 +120,10 @@ body {
 .prose-custom li {
   margin-bottom: 0.35rem;
   color: #1e293b;
+}
+
+.dark .prose-custom li {
+  color: #cbd5e1;
 }
 
 .prose-custom table {
@@ -98,14 +140,29 @@ body {
   color: #1e293b;
 }
 
+.dark .prose-custom th,
+.dark .prose-custom td {
+  border-color: #2a2f45;
+  color: #cbd5e1;
+}
+
 .prose-custom th {
   background-color: #f1f5f9;
   font-weight: 700;
   color: #0f172a;
 }
 
+.dark .prose-custom th {
+  background-color: #1e2235;
+  color: #f1f5f9;
+}
+
 .prose-custom tr:nth-child(even) td {
   background-color: #f8fafc;
+}
+
+.dark .prose-custom tr:nth-child(even) td {
+  background-color: #1a1d2e;
 }
 
 .prose-custom blockquote {
@@ -118,6 +175,11 @@ body {
   font-style: italic;
 }
 
+.dark .prose-custom blockquote {
+  background-color: #1e1b4b;
+  color: #a5b4fc;
+}
+
 .prose-custom code {
   background-color: #f1f5f9;
   border-radius: 0.25rem;
@@ -125,4 +187,21 @@ body {
   font-size: 0.875rem;
   color: #be185d;
   font-family: "Geist Mono", monospace;
+}
+
+.dark .prose-custom code {
+  background-color: #1e2235;
+  color: #f472b6;
+}
+
+.prose-custom pre code {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
+  color: inherit;
+}
+
+.dark .prose-custom pre code {
+  background-color: transparent;
+  color: inherit;
 }

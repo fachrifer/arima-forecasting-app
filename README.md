@@ -50,13 +50,16 @@ Upload CSV → Pilih Metrik → Tentukan Periode → Proses → Lihat Grafik & M
 ### Aplikasi Forecasting
 
 - **Upload CSV** dengan drag-and-drop
-- **Pilih metrik**: CPU, Memory, atau Storage
-- **Periode prediksi**: 1–5 tahun ke depan
+- **Pilih metrik**: CPU, Memory, atau Storage (multi-select, diproses paralel)
+- **Periode prediksi**: 1–60 bulan ke depan via slider + input angka, dengan disclaimer akurasi
 - **Auto ARIMA/SARIMA**: parameter dipilih otomatis menggunakan `pmdarima`
 - **Grafik interaktif**: data historis + hasil prediksi + confidence interval 95%
+- **Tab switching** antar metrik (grafik & tabel terpisah per metrik)
 - **Diagnostik model**: order `(p,d,q)`, seasonal order `(P,D,Q,m)`, AIC, BIC, ADF Test
-- **Evaluasi performa**: MAPE, RMSE, MAE pada data uji (20% terakhir)
+- **Evaluasi performa**: MAPE, RMSE, MAE — dengan penjelasan jika metrik kosong
 - **Ekspor CSV**: unduh hasil forecast beserta batas interval
+- **Ekspor PDF**: laporan lengkap beserta grafik forecast tertanam
+- **Dark mode**: toggle terang/gelap, tersimpan di `localStorage`
 
 ---
 

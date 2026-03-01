@@ -11,7 +11,7 @@ const techStack = [
 export default function PendahuluanPage() {
   return (
     <div className="prose-custom max-w-4xl">
-      <p className="!mb-1 text-sm font-semibold uppercase tracking-wider text-indigo-600">
+      <p className="!mb-1 text-sm font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
         BAB I
       </p>
       <h1 className="!mt-0">Pendahuluan</h1>
@@ -58,18 +58,18 @@ export default function PendahuluanPage() {
             desc: "Ketidakpastian prediksi kapasitas mengakibatkan kesulitan dalam menyusun rencana pengadaan perangkat keras tahunan yang tepat sasaran.",
           },
         ].map((item, i) => (
-          <div key={i} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="!mb-1 font-semibold text-slate-800">
+          <div key={i} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
+            <p className="!mb-1 font-semibold text-slate-800 dark:text-slate-100">
               {i + 1}. {item.title}
             </p>
-            <p className="!mb-0 text-sm text-slate-600">{item.desc}</p>
+            <p className="!mb-0 text-sm text-slate-600 dark:text-slate-400">{item.desc}</p>
           </div>
         ))}
       </div>
 
       <h2 className="border-l-4 border-indigo-500 pl-4">1.3 Rumusan Masalah</h2>
-      <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-5">
-        <p className="!mb-0 text-indigo-900">
+      <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-5 dark:border-indigo-800 dark:bg-indigo-950">
+        <p className="!mb-0 text-indigo-900 dark:text-indigo-200">
           Bagaimana merancang dan membangun aplikasi forecasting utilisasi sumber daya
           komputasi berbasis Next.js dan Docker yang menerapkan model ARIMA dan SARIMA
           guna menghasilkan prediksi kapasitas CPU, Memori, dan Disk yang akurat serta

@@ -33,12 +33,12 @@ export default function ModulLayout({ children }: { children: React.ReactNode })
     sidebarLinks.find((link) => isActive(link.href))?.label ?? "Modul";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white dark:bg-[var(--background)]">
       {/* Mobile top bar */}
-      <div className="sticky top-16 z-40 border-b border-slate-200 bg-white lg:hidden">
+      <div className="sticky top-16 z-40 border-b border-[var(--border)] bg-[var(--surface)] lg:hidden">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-slate-700"
+          className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-200"
         >
           <span className="flex items-center gap-2">
             <Menu className="h-4 w-4" />
@@ -50,7 +50,7 @@ export default function ModulLayout({ children }: { children: React.ReactNode })
         </button>
 
         {sidebarOpen && (
-          <div className="border-t border-slate-100 bg-white px-2 py-2">
+          <div className="border-t border-[var(--border-light)] bg-[var(--surface)] px-2 py-2">
             {sidebarLinks.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
@@ -58,8 +58,8 @@ export default function ModulLayout({ children }: { children: React.ReactNode })
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive(href)
-                    ? "bg-indigo-50 text-indigo-700"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[var(--surface-alt)] dark:hover:text-slate-200"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -73,7 +73,7 @@ export default function ModulLayout({ children }: { children: React.ReactNode })
       <div className="mx-auto flex max-w-7xl">
         {/* Desktop sidebar */}
         <aside className="hidden w-72 shrink-0 lg:block">
-          <div className="sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-slate-200 bg-white px-4 py-8">
+          <div className="sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] px-4 py-8">
             <h2 className="mb-6 px-3 text-xs font-bold uppercase tracking-wider text-slate-400">
               Daftar Materi
             </h2>
@@ -84,8 +84,8 @@ export default function ModulLayout({ children }: { children: React.ReactNode })
                   href={href}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                     isActive(href)
-                      ? "bg-indigo-50 text-indigo-700"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[var(--surface-alt)] dark:hover:text-slate-200"
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />

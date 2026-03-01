@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import Papa from "papaparse";
 import {
@@ -25,7 +25,7 @@ import ForecastChart from "./components/ForecastChart";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PDF = any;
 
-async function exportToPDF(metric: string, unit: string, data: ForecastResponse) {
+async function exportToPDF(metric: string, unit: string, data: ForecastResponse, chartEl?: HTMLElement | null) {
   const mod = await import("jspdf");
   // jsPDF v3+ uses named export; v2 uses default
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,8 +53,38 @@ async function exportToPDF(metric: string, unit: string, data: ForecastResponse)
   pdf.text(`Tanggal cetak: ${dateStr}`, ml, y);
   y += 10;
 
+  if (chartEl) {
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(chartEl, { backgroundColor: "#ffffff", scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+      const imgW = mr - ml;
+      const imgH = (canvas.height / canvas.width) * imgW;
+
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(30, 41, 59);
+      pdf.text(`Grafik Forecast — ${metric}`, ml, y);
+      y += 5;
+
+      if (y + imgH > pageH - 16) {
+        pdf.addPage();
+        y = 16;
+      }
+      pdf.addImage(imgData, "PNG", ml, y, imgW, imgH);
+      y += imgH + 8;
+    } catch {
+      // silently skip chart if capture fails
+    }
+  }
+
   const diag = data.diagnostics;
   const mets = data.metrics;
+
+  if (y + 70 > pageH - 16) {
+    pdf.addPage();
+    y = 16;
+  }
 
   pdf.setFontSize(11);
   pdf.setFont("helvetica", "bold");
@@ -157,9 +187,9 @@ const METRICS = [
 ] as const;
 
 const METRIC_COLORS: Record<string, { badge: string; line: string }> = {
-  CPU: { badge: "bg-indigo-50 text-indigo-700 border-indigo-200", line: "#6366f1" },
-  Memory: { badge: "bg-violet-50 text-violet-700 border-violet-200", line: "#7c3aed" },
-  Storage: { badge: "bg-blue-50 text-blue-700 border-blue-200", line: "#3b82f6" },
+  CPU: { badge: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800", line: "#6366f1" },
+  Memory: { badge: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800", line: "#7c3aed" },
+  Storage: { badge: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800", line: "#3b82f6" },
 };
 
 const CSV_FORMAT_COLUMNS = [
@@ -170,10 +200,10 @@ const CSV_FORMAT_COLUMNS = [
 ];
 
 function mapeColor(mape: number | null) {
-  if (mape === null) return "text-slate-500";
-  if (mape < 10) return "text-emerald-600";
-  if (mape < 20) return "text-amber-600";
-  return "text-red-600";
+  if (mape === null) return "text-slate-500 dark:text-slate-400";
+  if (mape < 10) return "text-emerald-600 dark:text-emerald-400";
+  if (mape < 20) return "text-amber-600 dark:text-amber-400";
+  return "text-red-600 dark:text-red-400";
 }
 
 function mapeLabel(mape: number | null) {
@@ -184,15 +214,19 @@ function mapeLabel(mape: number | null) {
 }
 
 function mapeBg(mape: number | null) {
-  if (mape === null) return "bg-slate-50";
-  if (mape < 10) return "bg-emerald-50";
-  if (mape < 20) return "bg-amber-50";
-  return "bg-red-50";
+  if (mape === null) return "bg-slate-50 dark:bg-[var(--surface-alt)]";
+  if (mape < 10) return "bg-emerald-50 dark:bg-emerald-950";
+  if (mape < 20) return "bg-amber-50 dark:bg-amber-950";
+  return "bg-red-50 dark:bg-red-950";
 }
 
 function formatNum(v: number | null | undefined, decimals = 4): string {
   if (v === null || v === undefined) return "-";
   return v.toFixed(decimals);
+}
+
+function hasNullMetrics(metrics: { mape: number | null; rmse: number | null; mae: number | null }): boolean {
+  return metrics.mape === null || metrics.rmse === null || metrics.mae === null;
 }
 
 function exportForecastCSV(metric: string, unit: string, data: ForecastResponse) {
@@ -223,10 +257,10 @@ function exportForecastCSV(metric: string, unit: string, data: ForecastResponse)
 function CsvFormatGuide() {
   const [open, setOpen] = useState(false);
   return (
-    <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50">
+    <div className="mt-3 rounded-lg border border-[var(--border)] bg-slate-50 dark:bg-[var(--surface-alt)]">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-3 py-2.5 text-xs font-semibold text-slate-600"
+        className="flex w-full items-center justify-between px-3 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300"
       >
         <span className="flex items-center gap-1.5">
           <FileText className="h-3.5 w-3.5 text-indigo-400" />
@@ -239,35 +273,35 @@ function CsvFormatGuide() {
         )}
       </button>
       {open && (
-        <div className="border-t border-slate-200 p-3">
-          <p className="mb-2 text-xs text-slate-500">
+        <div className="border-t border-[var(--border)] p-3">
+          <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
             File CSV harus memiliki kolom berikut (minimal kolom Tanggal + satu metrik):
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[380px] text-xs">
               <thead>
-                <tr className="bg-slate-100 text-left">
-                  <th className="px-2 py-1.5 font-semibold text-slate-600">Kolom</th>
-                  <th className="px-2 py-1.5 font-semibold text-slate-600">Tipe</th>
-                  <th className="px-2 py-1.5 font-semibold text-slate-600">Contoh</th>
-                  <th className="px-2 py-1.5 font-semibold text-slate-600">Wajib</th>
+                <tr className="bg-slate-100 text-left dark:bg-[var(--surface)]">
+                  <th className="px-2 py-1.5 font-semibold text-slate-600 dark:text-slate-300">Kolom</th>
+                  <th className="px-2 py-1.5 font-semibold text-slate-600 dark:text-slate-300">Tipe</th>
+                  <th className="px-2 py-1.5 font-semibold text-slate-600 dark:text-slate-300">Contoh</th>
+                  <th className="px-2 py-1.5 font-semibold text-slate-600 dark:text-slate-300">Wajib</th>
                 </tr>
               </thead>
               <tbody>
                 {CSV_FORMAT_COLUMNS.map((col) => (
-                  <tr key={col.name} className="border-t border-slate-200">
-                    <td className="px-2 py-1.5 font-mono font-semibold text-slate-700">
+                  <tr key={col.name} className="border-t border-[var(--border)]">
+                    <td className="px-2 py-1.5 font-mono font-semibold text-slate-700 dark:text-slate-200">
                       {col.name}
                     </td>
-                    <td className="px-2 py-1.5 text-slate-500">{col.type}</td>
-                    <td className="px-2 py-1.5 font-mono text-slate-600">
+                    <td className="px-2 py-1.5 text-slate-500 dark:text-slate-400">{col.type}</td>
+                    <td className="px-2 py-1.5 font-mono text-slate-600 dark:text-slate-300">
                       {col.example}
                     </td>
                     <td className="px-2 py-1.5">
                       {col.required ? (
-                        <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-600">Wajib</span>
+                        <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-600 dark:bg-red-950 dark:text-red-400">Wajib</span>
                       ) : (
-                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-400">Opsional</span>
+                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-400 dark:bg-[var(--surface)] dark:text-slate-500">Opsional</span>
                       )}
                     </td>
                   </tr>
@@ -275,7 +309,7 @@ function CsvFormatGuide() {
               </tbody>
             </table>
           </div>
-          <div className="mt-2.5 rounded bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          <div className="mt-2.5 rounded bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-950 dark:text-amber-300">
             <strong>Catatan:</strong> Format tanggal: DD/MM/YYYY atau YYYY-MM-DD.
             Minimal 24 baris data historis untuk hasil yang akurat.
           </div>
@@ -291,17 +325,18 @@ function MetricResultCard({ result }: { result: MetricResult }) {
   const unit = metricMeta?.unit ?? "";
   const colors = METRIC_COLORS[result.metric] ?? METRIC_COLORS.CPU;
   const [pdfLoading, setPdfLoading] = useState(false);
+  const chartRef = useRef<HTMLDivElement>(null);
 
   if (result.error) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-5">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-5 dark:border-red-900 dark:bg-red-950">
         <div className="flex items-start gap-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500 dark:text-red-400" />
           <div>
-            <p className="font-semibold text-red-700">
+            <p className="font-semibold text-red-700 dark:text-red-300">
               Forecast {result.metric} Gagal
             </p>
-            <p className="mt-0.5 text-sm text-red-600">{result.error}</p>
+            <p className="mt-0.5 text-sm text-red-600 dark:text-red-400">{result.error}</p>
           </div>
         </div>
       </div>
@@ -313,7 +348,7 @@ function MetricResultCard({ result }: { result: MetricResult }) {
   async function handleExportPDF() {
     setPdfLoading(true);
     try {
-      await exportToPDF(result.metric, unit, data);
+      await exportToPDF(result.metric, unit, data, chartRef.current);
     } finally {
       setPdfLoading(false);
     }
@@ -322,7 +357,7 @@ function MetricResultCard({ result }: { result: MetricResult }) {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+      <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 shadow-sm">
         <div className="flex items-center gap-3">
           <div
             className={`flex h-9 w-9 items-center justify-center rounded-lg ${colors.badge} border`}
@@ -330,7 +365,7 @@ function MetricResultCard({ result }: { result: MetricResult }) {
             <MetricIcon className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-800">{result.metric}</p>
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{result.metric}</p>
             <p className="text-xs text-slate-400">Satuan: {unit}</p>
           </div>
         </div>
@@ -338,7 +373,7 @@ function MetricResultCard({ result }: { result: MetricResult }) {
           <button
             onClick={handleExportPDF}
             disabled={pdfLoading}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:opacity-60 dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900"
           >
             {pdfLoading ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -351,77 +386,79 @@ function MetricResultCard({ result }: { result: MetricResult }) {
       </div>
 
       {/* Chart */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-slate-800">
+          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             Grafik Forecast — {result.metric}
           </h4>
           <span className="text-xs text-slate-400">Satuan: {unit}</span>
         </div>
-        <ForecastChart
-          historical={data.historical}
-          forecast={data.forecast}
-          accentColor={colors.line}
-          unit={unit}
-        />
+        <div ref={chartRef}>
+          <ForecastChart
+            historical={data.historical}
+            forecast={data.forecast}
+            accentColor={colors.line}
+            unit={unit}
+          />
+        </div>
       </div>
 
       {/* Diagnostics + Metrics */}
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Diagnostics */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h4 className="mb-4 text-sm font-semibold text-slate-800">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+          <h4 className="mb-4 text-sm font-semibold text-slate-800 dark:text-slate-100">
             Diagnostik Model
           </h4>
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <dt className="text-slate-500">Order (p,d,q)</dt>
-              <dd className="font-mono font-semibold text-slate-800">
+              <dt className="text-slate-500 dark:text-slate-400">Order (p,d,q)</dt>
+              <dd className="font-mono font-semibold text-slate-800 dark:text-slate-100">
                 ({data.diagnostics.order.join(",")})
               </dd>
             </div>
             {data.diagnostics.seasonal_order && (
               <div className="flex justify-between">
-                <dt className="text-slate-500">Seasonal (P,D,Q,m)</dt>
-                <dd className="font-mono font-semibold text-slate-800">
+                <dt className="text-slate-500 dark:text-slate-400">Seasonal (P,D,Q,m)</dt>
+                <dd className="font-mono font-semibold text-slate-800 dark:text-slate-100">
                   ({data.diagnostics.seasonal_order.join(",")})
                 </dd>
               </div>
             )}
             <div className="flex justify-between">
-              <dt className="text-slate-500">AIC</dt>
-              <dd className="font-mono font-semibold text-slate-800">
+              <dt className="text-slate-500 dark:text-slate-400">AIC</dt>
+              <dd className="font-mono font-semibold text-slate-800 dark:text-slate-100">
                 {formatNum(data.diagnostics.aic, 2)}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">BIC</dt>
-              <dd className="font-mono font-semibold text-slate-800">
+              <dt className="text-slate-500 dark:text-slate-400">BIC</dt>
+              <dd className="font-mono font-semibold text-slate-800 dark:text-slate-100">
                 {formatNum(data.diagnostics.bic, 2)}
               </dd>
             </div>
-            <div className="border-t border-slate-100 pt-3">
+            <div className="border-t border-[var(--border-light)] pt-3">
               <div className="flex justify-between">
-                <dt className="text-slate-500">ADF Statistic</dt>
-                <dd className="font-mono font-semibold text-slate-800">
+                <dt className="text-slate-500 dark:text-slate-400">ADF Statistic</dt>
+                <dd className="font-mono font-semibold text-slate-800 dark:text-slate-100">
                   {formatNum(data.diagnostics.adf_statistic)}
                 </dd>
               </div>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">p-value (ADF)</dt>
-              <dd className="font-mono font-semibold text-slate-800">
+              <dt className="text-slate-500 dark:text-slate-400">p-value (ADF)</dt>
+              <dd className="font-mono font-semibold text-slate-800 dark:text-slate-100">
                 {formatNum(data.diagnostics.adf_pvalue, 6)}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">Status</dt>
+              <dt className="text-slate-500 dark:text-slate-400">Status</dt>
               <dd>
                 <span
                   className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     data.diagnostics.is_stationary
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-amber-50 text-amber-700"
+                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                      : "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
                   }`}
                 >
                   {data.diagnostics.is_stationary ? "Stasioner" : "Non-Stasioner"}
@@ -432,14 +469,14 @@ function MetricResultCard({ result }: { result: MetricResult }) {
         </div>
 
         {/* Evaluation */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h4 className="mb-4 text-sm font-semibold text-slate-800">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+          <h4 className="mb-4 text-sm font-semibold text-slate-800 dark:text-slate-100">
             Evaluasi Model
           </h4>
           <div className="space-y-3">
             <div className={`rounded-lg p-3.5 ${mapeBg(data.metrics.mape)}`}>
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-slate-500">MAPE</p>
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">MAPE</p>
                 <span className={`text-xs font-semibold ${mapeColor(data.metrics.mape)}`}>
                   {mapeLabel(data.metrics.mape)}
                 </span>
@@ -451,21 +488,52 @@ function MetricResultCard({ result }: { result: MetricResult }) {
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg bg-slate-50 p-3.5">
-                <p className="text-xs font-medium text-slate-500">RMSE</p>
-                <p className="mt-0.5 text-lg font-bold text-slate-800">
+              <div className="rounded-lg bg-slate-50 p-3.5 dark:bg-[var(--surface-alt)]">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">RMSE</p>
+                <p className="mt-0.5 text-lg font-bold text-slate-800 dark:text-slate-100">
                   {formatNum(data.metrics.rmse, 2)}
                 </p>
                 <p className="text-xs text-slate-400">{unit}</p>
               </div>
-              <div className="rounded-lg bg-slate-50 p-3.5">
-                <p className="text-xs font-medium text-slate-500">MAE</p>
-                <p className="mt-0.5 text-lg font-bold text-slate-800">
+              <div className="rounded-lg bg-slate-50 p-3.5 dark:bg-[var(--surface-alt)]">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">MAE</p>
+                <p className="mt-0.5 text-lg font-bold text-slate-800 dark:text-slate-100">
                   {formatNum(data.metrics.mae, 2)}
                 </p>
                 <p className="text-xs text-slate-400">{unit}</p>
               </div>
             </div>
+            {hasNullMetrics(data.metrics) && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+                <p className="font-semibold">Mengapa ada nilai yang kosong (&ldquo;-&rdquo;)?</p>
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-amber-600 dark:text-amber-400">
+                  <li>
+                    Evaluasi menggunakan metode <em>train/test split</em> (80%/20%).
+                    Jika data historis terlalu sedikit, porsi test bisa kosong sehingga evaluasi tidak dapat dihitung.
+                  </li>
+                  {data.metrics.mape === null && data.metrics.rmse !== null && (
+                    <li>
+                      MAPE tidak dapat dihitung jika terdapat nilai aktual = 0 pada data uji, karena pembagian dengan nol.
+                    </li>
+                  )}
+                  <li>
+                    Jika model gagal dilatih pada data train, seluruh metrik evaluasi akan bernilai kosong.
+                  </li>
+                </ul>
+                <p className="mt-1.5 text-amber-500 dark:text-amber-400">
+                  Tambahkan lebih banyak data historis (minimal 24 baris) untuk mendapatkan evaluasi yang lengkap.
+                </p>
+              </div>
+            )}
+            {!hasNullMetrics(data.metrics) && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
+                <p className="font-semibold">Semua metrik evaluasi tersedia</p>
+                <p className="mt-0.5 text-emerald-600 dark:text-emerald-400">
+                  Model dievaluasi dengan <em>train/test split</em> (80%/20%) — data historis cukup untuk menghasilkan
+                  skor MAPE, RMSE, dan MAE.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -483,42 +551,42 @@ function ForecastTableSection({ result }: { result: MetricResult }) {
   const { data } = result;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${colors.badge}`}>
             <MetricIcon className="h-3 w-3" />
             {result.metric} ({unit})
           </span>
-          <h4 className="text-sm font-semibold text-slate-800">
+          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             Tabel Hasil Forecast
           </h4>
           <span className="text-xs text-slate-400">— {data.forecast.length} bulan</span>
         </div>
         <button
           onClick={() => exportForecastCSV(result.metric, unit, data)}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100 dark:bg-indigo-950 dark:text-indigo-300 dark:hover:bg-indigo-900"
         >
           <Download className="h-3.5 w-3.5" />
           Ekspor CSV
         </button>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-slate-100">
+      <div className="overflow-x-auto rounded-lg border border-[var(--border-light)]">
         <table className="w-full min-w-[600px] text-sm">
           <thead>
-            <tr className="bg-slate-50 text-left">
+            <tr className="bg-slate-50 text-left dark:bg-[var(--surface-alt)]">
               <th className="w-8 px-3 py-2.5 text-center font-semibold text-slate-400">#</th>
-              <th className="whitespace-nowrap px-4 py-2.5 font-semibold text-slate-600">Bulan</th>
-              <th className="whitespace-nowrap px-4 py-2.5 text-right font-semibold text-slate-600">
+              <th className="whitespace-nowrap px-4 py-2.5 font-semibold text-slate-600 dark:text-slate-300">Bulan</th>
+              <th className="whitespace-nowrap px-4 py-2.5 text-right font-semibold text-slate-600 dark:text-slate-300">
                 Forecast ({unit})
               </th>
-              <th className="whitespace-nowrap px-4 py-2.5 text-right font-semibold text-slate-600">
+              <th className="whitespace-nowrap px-4 py-2.5 text-right font-semibold text-slate-600 dark:text-slate-300">
                 Batas Bawah CI ({unit})
               </th>
-              <th className="whitespace-nowrap px-4 py-2.5 text-right font-semibold text-slate-600">
+              <th className="whitespace-nowrap px-4 py-2.5 text-right font-semibold text-slate-600 dark:text-slate-300">
                 Batas Atas CI ({unit})
               </th>
-              <th className="whitespace-nowrap px-4 py-2.5 text-right font-semibold text-slate-600">
+              <th className="whitespace-nowrap px-4 py-2.5 text-right font-semibold text-slate-600 dark:text-slate-300">
                 Rentang CI ({unit})
               </th>
             </tr>
@@ -532,24 +600,24 @@ function ForecastTableSection({ result }: { result: MetricResult }) {
               return (
                 <tr
                   key={p.date}
-                  className={`transition-colors hover:bg-indigo-50/30 ${
-                    idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"
+                  className={`transition-colors hover:bg-indigo-50/30 dark:hover:bg-indigo-950/30 ${
+                    idx % 2 === 0 ? "bg-[var(--surface)]" : "bg-slate-50/50 dark:bg-[var(--surface-alt)]/50"
                   }`}
                 >
                   <td className="px-3 py-2 text-center text-xs text-slate-400">{idx + 1}</td>
-                  <td className="whitespace-nowrap px-4 py-2 font-medium text-slate-700">
+                  <td className="whitespace-nowrap px-4 py-2 font-medium text-slate-700 dark:text-slate-200">
                     {new Date(p.date).toLocaleDateString("id-ID", {
                       month: "long",
                       year: "numeric",
                     })}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-2 text-right font-mono font-semibold text-slate-800">
+                  <td className="whitespace-nowrap px-4 py-2 text-right font-mono font-semibold text-slate-800 dark:text-slate-100">
                     {formatNum(p.value, 2)}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-2 text-right font-mono text-slate-500">
+                  <td className="whitespace-nowrap px-4 py-2 text-right font-mono text-slate-500 dark:text-slate-400">
                     {formatNum(p.lower_ci, 2)}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-2 text-right font-mono text-slate-500">
+                  <td className="whitespace-nowrap px-4 py-2 text-right font-mono text-slate-500 dark:text-slate-400">
                     {formatNum(p.upper_ci, 2)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-2 text-right font-mono text-slate-400">
@@ -570,11 +638,12 @@ export default function AplikasiPage() {
   const [selectedMetrics, setSelectedMetrics] = useState<Set<string>>(
     new Set(["CPU"]),
   );
-  const [forecastYears, setForecastYears] = useState(1);
+  const [forecastMonths, setForecastMonths] = useState(12);
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [results, setResults] = useState<MetricResult[] | null>(null);
   const [activeTab, setActiveTab] = useState<string>("");
+  const [activeTableTab, setActiveTableTab] = useState<string>("");
 
   const onDrop = useCallback((accepted: File[]) => {
     if (accepted.length > 0) {
@@ -619,10 +688,11 @@ export default function AplikasiPage() {
       const metrics = METRICS.filter((m) => selectedMetrics.has(m.value)).map(
         (m) => m.value,
       );
-      const res = await postForecastMulti(file, metrics, forecastYears);
+      const res = await postForecastMulti(file, metrics, forecastMonths);
       setResults(res);
       const firstSuccess = res.find((r) => !r.error);
       setActiveTab(firstSuccess?.metric ?? res[0].metric);
+      setActiveTableTab(firstSuccess?.metric ?? res[0].metric);
     } catch {
       setGlobalError("Terjadi kesalahan tak terduga. Coba lagi.");
     } finally {
@@ -634,13 +704,13 @@ export default function AplikasiPage() {
   const errorCount = results?.filter((r) => r.error).length ?? 0;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <main className="min-h-screen bg-white dark:bg-[var(--background)]">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-100">
             Aplikasi Forecasting
           </h1>
-          <p className="mt-1.5 text-sm text-slate-600 sm:text-base">
+          <p className="mt-1.5 text-sm text-slate-600 sm:text-base dark:text-slate-400">
             Unggah data CSV utilisasi, pilih kombinasi metrik, dan jalankan
             prediksi menggunakan ARIMA/SARIMA.
           </p>
@@ -650,24 +720,24 @@ export default function AplikasiPage() {
           {/* ── Input Panel ─────────────────────────────── */}
           <div className="space-y-5">
             {/* Upload */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
-                <Upload className="h-4 w-4 text-indigo-500" />
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                <Upload className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
                 Unggah Data CSV
               </h2>
               <div
                 {...getRootProps()}
                 className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-7 text-center transition-colors ${
                   isDragActive
-                    ? "border-indigo-400 bg-indigo-50"
-                    : "border-slate-300 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50"
+                    ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950"
+                    : "border-slate-300 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50 dark:border-[var(--border)] dark:bg-[var(--surface-alt)] dark:hover:border-indigo-700 dark:hover:bg-indigo-950/30"
                 }`}
               >
                 <input {...getInputProps()} />
                 {file ? (
                   <>
-                    <CheckCircle2 className="mb-2 h-8 w-8 text-emerald-500" />
-                    <p className="text-sm font-medium text-emerald-700">
+                    <CheckCircle2 className="mb-2 h-8 w-8 text-emerald-500 dark:text-emerald-400" />
+                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
                       {file.name}
                     </p>
                     <p className="mt-0.5 text-xs text-slate-400">
@@ -677,10 +747,10 @@ export default function AplikasiPage() {
                 ) : (
                   <>
                     <Upload className="mb-2 h-8 w-8 text-slate-400" />
-                    <p className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
                       Seret file CSV ke sini
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       atau klik untuk memilih
                     </p>
                   </>
@@ -690,17 +760,17 @@ export default function AplikasiPage() {
             </div>
 
             {/* Metric Multi-Select */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                  <Activity className="h-4 w-4 text-indigo-500" />
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  <Activity className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
                   Pilih Metrik
                 </h2>
-                <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
                   {selectedMetrics.size} dipilih
                 </span>
               </div>
-              <p className="mb-3 text-xs text-slate-500">
+              <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
                 Pilih satu atau lebih metrik. Setiap metrik diproses secara
                 terpisah.
               </p>
@@ -716,12 +786,12 @@ export default function AplikasiPage() {
                       className={`flex w-full items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-all ${
                         active
                           ? `${colors.badge} border-current shadow-sm`
-                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                          : "border-[var(--border)] bg-[var(--surface)] text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:text-slate-300 dark:hover:border-[var(--muted)] dark:hover:bg-[var(--surface-alt)]"
                       }`}
                     >
                       <div
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                          active ? "bg-white/60" : "bg-slate-100"
+                          active ? "bg-white/60 dark:bg-white/10" : "bg-slate-100 dark:bg-[var(--surface-alt)]"
                         }`}
                       >
                         <Icon className="h-4 w-4" />
@@ -736,7 +806,7 @@ export default function AplikasiPage() {
                         className={`h-4 w-4 shrink-0 rounded border-2 transition-all ${
                           active
                             ? "border-current bg-current"
-                            : "border-slate-300 bg-white"
+                            : "border-slate-300 bg-white dark:border-slate-600 dark:bg-[var(--surface)]"
                         }`}
                       >
                         {active && (
@@ -758,34 +828,57 @@ export default function AplikasiPage() {
             </div>
 
             {/* Forecast period */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
-                <BarChart3 className="h-4 w-4 text-indigo-500" />
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                <BarChart3 className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
                 Periode Prediksi
               </h2>
               <div className="flex items-center gap-4">
                 <input
                   type="range"
                   min={1}
-                  max={5}
-                  value={forecastYears}
-                  onChange={(e) => setForecastYears(Number(e.target.value))}
-                  className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-indigo-600"
+                  max={60}
+                  value={forecastMonths}
+                  onChange={(e) => setForecastMonths(Number(e.target.value))}
+                  className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-indigo-600 dark:bg-[var(--border)]"
                 />
-                <span className="min-w-[4rem] rounded-lg bg-indigo-50 px-3 py-1.5 text-center text-sm font-bold text-indigo-700">
-                  {forecastYears} tahun
-                </span>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={forecastMonths}
+                    onChange={(e) => {
+                      const v = Math.max(1, Math.min(60, Number(e.target.value) || 1));
+                      setForecastMonths(v);
+                    }}
+                    className="w-20 rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-center text-sm font-bold text-indigo-700 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 dark:focus:border-indigo-600"
+                  />
+                  <span className="absolute -bottom-4 left-0 w-full text-center text-[10px] text-slate-400">
+                    bulan
+                  </span>
+                </div>
               </div>
-              <p className="mt-2 text-xs text-slate-400">
-                {forecastYears * 12} bulan ke depan
+              <p className="mt-5 text-xs text-slate-500 dark:text-slate-400">
+                {forecastMonths} bulan ke depan
+                {forecastMonths >= 12 && (
+                  <span className="text-slate-400">
+                    {" "}({(forecastMonths / 12).toFixed(forecastMonths % 12 === 0 ? 0 : 1)} tahun)
+                  </span>
+                )}
               </p>
+              <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                <strong>Disclaimer:</strong> Prediksi ARIMA/SARIMA paling akurat untuk jangka pendek (1–12 bulan).
+                Semakin panjang periode prediksi, semakin besar ketidakpastian (confidence interval melebar).
+                Untuk periode &gt;24 bulan, gunakan hasil sebagai estimasi kasar, bukan acuan pasti.
+              </div>
             </div>
 
             {/* Submit */}
             <button
               onClick={handleSubmit}
               disabled={loading || selectedMetrics.size === 0}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/25 transition-all hover:bg-indigo-700 hover:shadow-xl hover:shadow-indigo-600/30 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/25 transition-all hover:bg-indigo-700 hover:shadow-xl hover:shadow-indigo-600/30 disabled:cursor-not-allowed disabled:opacity-60 dark:shadow-none dark:hover:bg-indigo-500"
             >
               {loading ? (
                 <>
@@ -801,7 +894,7 @@ export default function AplikasiPage() {
             </button>
 
             {globalError && (
-              <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 {globalError}
               </div>
@@ -811,21 +904,21 @@ export default function AplikasiPage() {
           {/* ── Results Panel ───────────────────────────── */}
           <div className="space-y-6">
             {!results && !loading && (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/60 py-24 text-center">
-                <BarChart3 className="mb-3 h-10 w-10 text-slate-300" />
-                <p className="text-sm font-medium text-slate-500">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)]/60 py-24 text-center">
+                <BarChart3 className="mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                   Hasil forecast akan muncul di sini
                 </p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                   Unggah data dan klik &quot;Proses Forecast&quot; untuk memulai
                 </p>
               </div>
             )}
 
             {loading && (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white py-24 text-center">
-                <Loader2 className="mb-3 h-8 w-8 animate-spin text-indigo-500" />
-                <p className="text-sm font-medium text-slate-600">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-24 text-center">
+                <Loader2 className="mb-3 h-8 w-8 animate-spin text-indigo-500 dark:text-indigo-400" />
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
                   Menjalankan model ARIMA/SARIMA…
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
@@ -837,13 +930,13 @@ export default function AplikasiPage() {
             {results && !loading && (
               <>
                 {/* Summary bar */}
-                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                  <p className="text-sm text-slate-700">
+                <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-sm">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500 dark:text-emerald-400" />
+                  <p className="text-sm text-slate-700 dark:text-slate-200">
                     <span className="font-semibold">{successCount} metrik</span>{" "}
                     berhasil diproses
                     {errorCount > 0 && (
-                      <span className="ml-1 text-red-600">
+                      <span className="ml-1 text-red-600 dark:text-red-400">
                         ({errorCount} gagal)
                       </span>
                     )}
@@ -852,7 +945,7 @@ export default function AplikasiPage() {
 
                 {/* Tab navigation */}
                 {results.length > 1 && (
-                  <div className="flex gap-1.5 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
+                  <div className="flex gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-sm">
                     {results.map((r) => {
                       const Icon =
                         METRICS.find((m) => m.value === r.metric)?.icon ?? Cpu;
@@ -865,7 +958,7 @@ export default function AplikasiPage() {
                           className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-all ${
                             isActive
                               ? `${colors.badge} shadow-sm`
-                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-[var(--surface-alt)] dark:hover:text-slate-200"
                           }`}
                         >
                           <Icon className="h-3.5 w-3.5" />
@@ -886,18 +979,43 @@ export default function AplikasiPage() {
                     <MetricResultCard key={r.metric} result={r} />
                   ))}
 
-                {/* All forecast tables — always visible */}
+                {/* Forecast tables — tabbed like chart */}
                 {results.some((r) => !r.error) && (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 border-t border-slate-200 pt-4">
-                      <h3 className="text-sm font-semibold text-slate-700">
+                    <div className="flex items-center gap-2 border-t border-[var(--border)] pt-4">
+                      <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                         Tabel Hasil Forecast
                       </h3>
-                      <span className="text-xs text-slate-400">— semua metrik</span>
                     </div>
-                    {results.map((r) => (
-                      <ForecastTableSection key={r.metric} result={r} />
-                    ))}
+                    {results.filter((r) => !r.error).length > 1 && (
+                      <div className="flex gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-sm">
+                        {results.filter((r) => !r.error).map((r) => {
+                          const Icon =
+                            METRICS.find((m) => m.value === r.metric)?.icon ?? Cpu;
+                          const colors = METRIC_COLORS[r.metric];
+                          const isActive = activeTableTab === r.metric;
+                          return (
+                            <button
+                              key={r.metric}
+                              onClick={() => setActiveTableTab(r.metric)}
+                              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-all ${
+                                isActive
+                                  ? `${colors.badge} shadow-sm`
+                                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-[var(--surface-alt)] dark:hover:text-slate-200"
+                              }`}
+                            >
+                              <Icon className="h-3.5 w-3.5" />
+                              {r.metric}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {results
+                      .filter((r) => r.metric === activeTableTab && !r.error)
+                      .map((r) => (
+                        <ForecastTableSection key={r.metric} result={r} />
+                      ))}
                   </div>
                 )}
               </>

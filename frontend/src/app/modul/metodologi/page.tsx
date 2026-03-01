@@ -1,30 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ClipboardList } from "lucide-react";
+import { ArrowLeft, ArrowRight, ClipboardList } from "lucide-react";
 
 export default function MetodologiPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div>
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         {/* Back */}
         <Link
           href="/"
-          className="mb-8 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-indigo-600"
+          className="mb-8 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400"
         >
           <ArrowLeft className="h-4 w-4" />
           Kembali ke Beranda
         </Link>
 
         <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50">
-            <ClipboardList className="h-5 w-5 text-indigo-600" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950">
+            <ClipboardList className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">
+            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
               BAB III
             </p>
-            <h1 className="text-2xl font-extrabold text-slate-900">
+            <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
               Metodologi Penelitian
             </h1>
           </div>
@@ -192,7 +192,18 @@ export default function MetodologiPage() {
             </table>
           </section>
         </div>
+
+        <div className="mt-10 flex items-center justify-between">
+          <Link href="/modul/landasan-teori" className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-slate-700 no-underline transition-colors hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[var(--surface-alt)]">
+            <ArrowLeft className="h-4 w-4" />
+            Sebelumnya: Landasan Teori
+          </Link>
+          <Link href="/modul/implementasi" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white no-underline transition-colors hover:bg-indigo-700">
+            Selanjutnya: Implementasi
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

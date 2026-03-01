@@ -35,7 +35,7 @@ const suggestions = [
 export default function KesimpulanPage() {
   return (
     <div className="prose-custom max-w-4xl">
-      <p className="!mb-1 text-sm font-semibold uppercase tracking-wider text-indigo-600">BAB V</p>
+      <p className="!mb-1 text-sm font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">BAB V</p>
       <h1 className="!mt-0">Kesimpulan dan Saran</h1>
 
       <h2 className="border-l-4 border-indigo-500 pl-4">5.1 Kesimpulan</h2>
@@ -43,13 +43,13 @@ export default function KesimpulanPage() {
 
       <div className="mt-4 space-y-4">
         {findings.map(({ icon: Icon, title, description }, idx) => (
-          <div key={idx} className="flex gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-50">
-              <Icon className="h-5 w-5 text-green-600" />
+          <div key={idx} className="flex gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-50 dark:bg-green-950">
+              <Icon className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <h3 className="!mt-0 !mb-1 text-base font-semibold text-slate-900">{idx + 1}. {title}</h3>
-              <p className="!mb-0 text-sm text-slate-600">{description}</p>
+              <h3 className="!mt-0 !mb-1 text-base font-semibold text-slate-900 dark:text-slate-100">{idx + 1}. {title}</h3>
+              <p className="!mb-0 text-sm text-slate-600 dark:text-slate-400">{description}</p>
             </div>
           </div>
         ))}
@@ -60,20 +60,20 @@ export default function KesimpulanPage() {
 
       <div className="mt-4 space-y-4">
         {suggestions.map(({ icon: Icon, title, description }, idx) => (
-          <div key={idx} className="flex gap-4 rounded-xl border border-amber-200 bg-amber-50 p-6">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100">
-              <Icon className="h-5 w-5 text-amber-700" />
+          <div key={idx} className="flex gap-4 rounded-xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-900 dark:bg-amber-950">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900">
+              <Icon className="h-5 w-5 text-amber-700 dark:text-amber-300" />
             </div>
             <div>
-              <h3 className="!mt-0 !mb-1 text-base font-semibold text-amber-900">{idx + 1}. {title}</h3>
-              <p className="!mb-0 text-sm text-amber-800">{description}</p>
+              <h3 className="!mt-0 !mb-1 text-base font-semibold text-amber-900 dark:text-amber-200">{idx + 1}. {title}</h3>
+              <p className="!mb-0 text-sm text-amber-800 dark:text-amber-300">{description}</p>
             </div>
           </div>
         ))}
       </div>
 
       <div className="mt-10 flex items-center justify-between">
-        <Link href="/modul/implementasi" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 no-underline transition-colors hover:bg-slate-50">
+        <Link href="/modul/implementasi" className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-slate-700 no-underline transition-colors hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[var(--surface-alt)]">
           <ArrowLeft className="h-4 w-4" />
           Sebelumnya
         </Link>

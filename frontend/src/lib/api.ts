@@ -45,12 +45,12 @@ export interface MetricResult {
 export async function postForecast(
   file: File,
   metric: string,
-  forecastYears: number,
+  forecastMonths: number,
 ): Promise<ForecastResponse> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("metric", metric);
-  formData.append("forecast_years", String(forecastYears));
+  formData.append("forecast_months", String(forecastMonths));
 
   const res = await fetch(`${API_BASE}/api/forecast`, {
     method: "POST",
@@ -68,12 +68,12 @@ export async function postForecast(
 export async function postForecastMulti(
   file: File,
   metrics: string[],
-  forecastYears: number,
+  forecastMonths: number,
 ): Promise<MetricResult[]> {
   const results = await Promise.all(
     metrics.map(async (metric): Promise<MetricResult> => {
       try {
-        const data = await postForecast(file, metric, forecastYears);
+        const data = await postForecast(file, metric, forecastMonths);
         return { metric, data, error: null };
       } catch (err) {
         return {
