@@ -12,8 +12,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# NEXT_PUBLIC_API_URL  — URL the browser uses to reach the backend.
+# NEXT_PUBLIC_INCLUDE_MODUL — set to "true" to include /modul learning pages;
+#                              leave unset or "false" for the app-only image.
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ARG NEXT_PUBLIC_INCLUDE_MODUL=false
+
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_INCLUDE_MODUL=$NEXT_PUBLIC_INCLUDE_MODUL
 
 RUN npm run build
 

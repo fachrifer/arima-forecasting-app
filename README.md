@@ -212,19 +212,31 @@ Frontend akan berjalan di: `http://localhost:3000`
 
 ### Mode Production (Docker)
 
-Cara paling mudah untuk menjalankan seluruh sistem sekaligus:
+Tersedia **dua varian image** frontend:
+
+| Varian | File Compose | Isi |
+|--------|-------------|-----|
+| **App-only** | `docker-compose.yml` | Hanya aplikasi forecasting (`/aplikasi`), tanpa halaman modul |
+| **Full** | `docker-compose.full.yml` | Aplikasi forecasting + seluruh modul pembelajaran (`/modul`) |
+
+#### Image 1 — App-only (tanpa modul)
 
 ```bash
 # Dari root direktori proyek
 docker compose up --build
 ```
 
-Perintah ini akan:
-1. Build image Docker untuk backend (Python/FastAPI)
-2. Build image Docker untuk frontend (Next.js)
-3. Menjalankan kedua container secara bersamaan
+#### Image 2 — Full (dengan modul pembelajaran)
 
-Setelah berhasil:
+```bash
+docker compose -f docker-compose.full.yml up --build
+```
+
+Perbedaan antara kedua image ditentukan oleh build arg `NEXT_PUBLIC_INCLUDE_MODUL` yang
+disisipkan saat `npm run build`. Nilai ini di-*bake* ke dalam bundle statis Next.js,
+sehingga kedua image menghasilkan binary yang berbeda.
+
+Setelah berhasil (keduanya sama):
 
 | Layanan | URL |
 |---------|-----|
@@ -232,19 +244,22 @@ Setelah berhasil:
 | Backend API | http://localhost:8000 |
 | Swagger API Docs | http://localhost:8000/docs |
 
-Untuk menghentikan semua container:
+Untuk menghentikan container:
 
 ```bash
 docker compose down
+# atau untuk full:
+docker compose -f docker-compose.full.yml down
 ```
 
-Untuk menjalankan di background (tanpa menampilkan log):
+Jalankan di background:
 
 ```bash
 docker compose up --build -d
+docker compose -f docker-compose.full.yml up --build -d
 ```
 
-Untuk melihat log setelah berjalan di background:
+Lihat log:
 
 ```bash
 docker compose logs -f

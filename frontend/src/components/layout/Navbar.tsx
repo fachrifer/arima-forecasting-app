@@ -6,9 +6,11 @@ import { useState } from "react";
 import { BarChart3, BookOpen, Home, Menu, X, Moon, Sun } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
+const includeModul = process.env.NEXT_PUBLIC_INCLUDE_MODUL === "true";
+
 const navLinks = [
   { href: "/", label: "Beranda", icon: Home },
-  { href: "/modul", label: "Modul", icon: BookOpen },
+  ...(includeModul ? [{ href: "/modul", label: "Modul", icon: BookOpen }] : []),
   { href: "/aplikasi", label: "Aplikasi", icon: BarChart3 },
 ];
 
