@@ -117,14 +117,19 @@ export default function ForecastChart({
           }}
           labelStyle={{ color: "#1e293b", fontWeight: 600, marginBottom: 4 }}
           itemStyle={{ color: "#334155" }}
-          formatter={(value: number, name: string) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          formatter={(value: any, name: any) => {
             const label =
               name === "historical"
                 ? "Historis"
                 : name === "forecast"
                   ? "Forecast"
-                  : name;
-            return [`${Number(value).toFixed(2)}${unit ? ` ${unit}` : ""}`, label];
+                  : String(name ?? "");
+            const formatted =
+              value !== null && value !== undefined
+                ? `${Number(value).toFixed(2)}${unit ? ` ${unit}` : ""}`
+                : "-";
+            return [formatted, label];
           }}
         />
         <Legend

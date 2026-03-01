@@ -54,4 +54,4 @@ async def forecast(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Forecasting failed: {e}")
 
-    return result
+    return {**result, "metric": metric}

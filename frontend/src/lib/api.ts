@@ -9,7 +9,7 @@ export interface ForecastPoint {
 
 export interface HistoricalPoint {
   date: string;
-  value: number;
+  value: number | null;
 }
 
 export interface Diagnostics {

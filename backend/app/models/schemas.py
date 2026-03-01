@@ -34,6 +34,7 @@ class EvaluationMetrics(BaseModel):
 
 
 class ForecastResponse(BaseModel):
+    metric: str
     historical: list[ForecastPoint]
     forecast: list[ForecastPoint]
     diagnostics: ModelDiagnostics
