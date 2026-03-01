@@ -2,21 +2,28 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * When the image is built with NEXT_PUBLIC_INCLUDE_MODUL=false (the default
- * "app-only" image), all /modul routes return 404 so the learning module is
- * inaccessible.  Set NEXT_PUBLIC_INCLUDE_MODUL=true to enable them (the
- * "full" image).
+ * App-only image (NEXT_PUBLIC_INCLUDE_MODUL != "true"):
+ *   - / and /modul/* are redirected straight to /aplikasi
+ *
+ * Full image (NEXT_PUBLIC_INCLUDE_MODUL = "true"):
+ *   - all routes pass through normally
  */
 export function middleware(request: NextRequest) {
   const includeModul = process.env.NEXT_PUBLIC_INCLUDE_MODUL === "true";
 
-  if (!includeModul && request.nextUrl.pathname.startsWith("/modul")) {
-    return NextResponse.rewrite(new URL("/not-found", request.url));
+  if (!includeModul) {
+    const { pathname } = request.nextUrl;
+
+    // Redirect home and all modul routes to /aplikasi
+    if (pathname === "/" || pathname.startsWith("/modul")) {
+      return NextResponse.redirect(new URL("/aplikasi", request.url));
+    }
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/modul/:path*"],
+  // Run on root and all modul paths
+  matcher: ["/", "/modul/:path*"],
 };

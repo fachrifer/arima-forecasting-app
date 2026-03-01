@@ -8,11 +8,15 @@ import { useTheme } from "./ThemeProvider";
 
 const includeModul = process.env.NEXT_PUBLIC_INCLUDE_MODUL === "true";
 
-const navLinks = [
-  { href: "/", label: "Beranda", icon: Home },
-  ...(includeModul ? [{ href: "/modul", label: "Modul", icon: BookOpen }] : []),
-  { href: "/aplikasi", label: "Aplikasi", icon: BarChart3 },
-];
+// App-only image: only show Aplikasi (no Beranda, no Modul)
+// Full image: show all three links
+const navLinks = includeModul
+  ? [
+      { href: "/", label: "Beranda", icon: Home },
+      { href: "/modul", label: "Modul", icon: BookOpen },
+      { href: "/aplikasi", label: "Aplikasi", icon: BarChart3 },
+    ]
+  : [{ href: "/aplikasi", label: "Aplikasi", icon: BarChart3 }];
 
 export default function Navbar() {
   const pathname = usePathname();
