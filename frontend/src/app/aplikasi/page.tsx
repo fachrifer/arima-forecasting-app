@@ -469,9 +469,16 @@ function DiagnosticsPanel({ result }: { result: MetricResult }) {
           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
             <p className="font-semibold">Mengapa ada nilai kosong?</p>
             <ul className="mt-1 list-inside list-disc space-y-0.5 text-amber-600 dark:text-amber-400">
-              <li>Data historis terlalu sedikit (butuh min. 24 baris).</li>
-              {data.metrics.mape === null && data.metrics.rmse !== null && (
-                <li>MAPE tidak bisa dihitung jika ada nilai aktual = 0.</li>
+              <li>
+                Evaluasi menggunakan <em>train/test split</em> (80%/20%): model dilatih ulang pada
+                data train, lalu diuji pada 20% terakhir. Jika model gagal pada proses ini (misal
+                data terlalu pendek atau tidak stasioner pada subset), metrik tidak dapat dihitung.
+              </li>
+              {data.metrics.mape === null && (data.metrics.rmse !== null || data.metrics.mae !== null) && (
+                <li>MAPE tidak dapat dihitung jika ada nilai aktual = 0 pada data uji (pembagian dengan nol).</li>
+              )}
+              {data.metrics.rmse === null && data.metrics.mae === null && (
+                <li>Seluruh metrik kosong berarti model evaluasi gagal dilatih — coba tambah lebih banyak data historis.</li>
               )}
             </ul>
           </div>
@@ -525,7 +532,7 @@ function ForecastTableSection({ result }: { result: MetricResult }) {
             {data.forecast.map((p, idx) => {
               const range = p.lower_ci !== null && p.upper_ci !== null ? p.upper_ci - p.lower_ci : null;
               const widthPct = range !== null && data.forecast.length > 0
-                ? Math.min(100, (range / (data.forecast[data.forecast.length - 1]?.upper_ci ?? 1 || 1)) * 100)
+                ? Math.min(100, (range / ((data.forecast[data.forecast.length - 1]?.upper_ci ?? 1) || 1)) * 100)
                 : 0;
               return (
                 <tr
@@ -659,6 +666,25 @@ function MetricDashboard({ result }: { result: MetricResult }) {
               unit={unit}
             />
           </div>
+          {/* Jump warning — shown only when first forecast deviates noticeably from last historical */}
+          {(() => {
+            const lastH = data.historical[data.historical.length - 1];
+            const firstF = data.forecast[0];
+            if (!lastH || !firstF || lastH.value === null || firstF.value === null) return null;
+            const pct = Math.abs((firstF.value - lastH.value) / lastH.value) * 100;
+            if (pct < 5) return null;
+            return (
+              <div className="mx-4 mb-4 flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>
+                  <strong>Mengapa ada lompatan di awal forecast?</strong> Nilai forecast pertama ({formatNum(firstF.value, 2)} {unit}) berbeda{" "}
+                  {pct.toFixed(1)}% dari data historis terakhir ({formatNum(lastH.value, 2)} {unit}). Ini adalah perilaku normal model ARIMA/SARIMA —
+                  model memperhitungkan tren, musiman, dan autokorelasi dari seluruh data historis, sehingga prediksi pertama bisa
+                  langsung mencerminkan tren yang terdeteksi, bukan sekadar meneruskan nilai terakhir.
+                </span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Side panel */}
@@ -943,7 +969,7 @@ export default function AplikasiPage() {
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-[var(--surface-alt)]">
                   <BarChart3 className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                 </div>
-                <p className="mt-4 text-base font-semibold text-slate-500 dark:text-slate-400">Dashboard kosong</p>
+                <p className="mt-4 text-base font-semibold text-slate-500 dark:text-slate-400">Forecast kosong</p>
                 <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">
                   Unggah CSV dan klik &quot;Jalankan Forecast&quot; untuk memulai
                 </p>

@@ -22,6 +22,7 @@ interface ChartPoint {
   forecast?: number | null;
   ci_low?: number | null;
   ci_high?: number | null;
+  isSplitPoint?: boolean;
 }
 
 interface ForecastChartProps {
@@ -61,6 +62,7 @@ function CustomTooltip({ active, payload, label, unit, isDark }: any) {
   const forecast = payload.find((p: { dataKey: string }) => p.dataKey === "forecast");
   const ci_low = payload.find((p: { dataKey: string }) => p.dataKey === "ci_low");
   const ci_high = payload.find((p: { dataKey: string }) => p.dataKey === "ci_high");
+  const isSplit = payload[0]?.payload?.isSplitPoint;
 
   const bg = isDark ? "#1a1d2e" : "#ffffff";
   const border = isDark ? "#2a2f45" : "#e2e8f0";
@@ -75,10 +77,17 @@ function CustomTooltip({ active, payload, label, unit, isDark }: any) {
         borderRadius: 10,
         boxShadow: isDark ? "0 8px 24px rgba(0,0,0,0.5)" : "0 8px 24px rgba(0,0,0,0.12)",
         padding: "10px 14px",
-        minWidth: 160,
+        minWidth: 170,
       }}
     >
-      <p style={{ color: textPrimary, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>{label}</p>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+        <p style={{ color: textPrimary, fontWeight: 700, fontSize: 12, margin: 0 }}>{label}</p>
+        {isSplit && (
+          <span style={{ fontSize: 9, fontWeight: 600, color: "#6366f1", background: isDark ? "#1e2040" : "#eef2ff", borderRadius: 4, padding: "1px 5px" }}>
+            Awal Forecast
+          </span>
+        )}
+      </div>
       {historical?.value !== null && historical?.value !== undefined && (
         <div style={{ display: "flex", justifyContent: "space-between", gap: 16, marginBottom: 4 }}>
           <span style={{ color: textSub, fontSize: 11 }}>Historis</span>
@@ -154,6 +163,7 @@ export default function ForecastChart({
     forecast: p.value,
     ci_low: p.lower_ci ?? null,
     ci_high: p.upper_ci ?? null,
+    isSplitPoint: i === 0,
   }));
 
   const data: ChartPoint[] = [...histPoints, ...fcPoints];
