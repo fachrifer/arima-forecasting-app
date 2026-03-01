@@ -21,23 +21,29 @@ def _evaluate_on_test(ts: pd.Series, seasonal: bool, m: int) -> dict:
     if len(test) == 0:
         return {"mape": None, "rmse": None, "mae": None}
 
-    try:
-        model = auto_arima(
-            train,
-            seasonal=seasonal,
-            m=m,
-            stepwise=True,
-            suppress_warnings=True,
-            error_action="ignore",
-        )
-        predicted = model.predict(n_periods=len(test))
-        return {
-            "mape": compute_mape(test.values, predicted),
-            "rmse": compute_rmse(test.values, predicted),
-            "mae": compute_mae(test.values, predicted),
-        }
-    except Exception:
-        return {"mape": None, "rmse": None, "mae": None}
+    # Try with the requested seasonality first; fall back to non-seasonal if it fails.
+    for use_s, use_m in [(seasonal, m), (False, 1)]:
+        try:
+            model = auto_arima(
+                train,
+                seasonal=use_s,
+                m=use_m,
+                stepwise=True,
+                suppress_warnings=True,
+                error_action="ignore",
+                max_p=3,
+                max_q=3,
+            )
+            predicted = model.predict(n_periods=len(test))
+            return {
+                "mape": compute_mape(test.values, predicted),
+                "rmse": compute_rmse(test.values, predicted),
+                "mae": compute_mae(test.values, predicted),
+            }
+        except Exception:
+            continue
+
+    return {"mape": None, "rmse": None, "mae": None}
 
 
 def run_full_forecast(

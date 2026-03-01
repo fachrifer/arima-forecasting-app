@@ -1,6 +1,6 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# App-only image  (no /modul learning pages)
-# Usage:  docker compose up --build
+# Full image  (app + /modul learning pages)
+# Usage:  docker compose -f docker-compose.full.yml up --build
 # ─────────────────────────────────────────────────────────────────────────────
 services:
   backend:
@@ -23,7 +23,7 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8000
-        NEXT_PUBLIC_INCLUDE_MODUL: "false"
+        NEXT_PUBLIC_INCLUDE_MODUL: "true"
     ports:
       - "3000:3000"
     depends_on:
