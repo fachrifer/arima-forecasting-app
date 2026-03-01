@@ -10,3 +10,9 @@ arima/
 dist/
 .venv/
 venv/
+
+# Streamlit prototype (not part of the project)
+dashboard.py
+forecasting.py
+requirements.txt
+*.docx
