@@ -1,0 +1,12 @@
+# EXCLUDE: The internal git database (prevents indexing bloat)
+.git/
+
+# EXCLUDE: Dependencies and build artifacts (the AI doesn't need these)
+**/node_modules/
+**/.next/
+**/__pycache__/
+**/venv/
+**/.venv/
+
+# EXCLUDE: Large data files (unless you need the AI to analyze the CSV structure)
+# data_dummy.csv
