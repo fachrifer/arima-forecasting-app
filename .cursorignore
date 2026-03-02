@@ -1,12 +1,36 @@
-# EXCLUDE: The internal git database (prevents indexing bloat)
-.git/
+# Build & Compiled Artifacts
+.next/
+out/
+dist/
+build/
+.cache/
 
-# EXCLUDE: Dependencies and build artifacts (the AI doesn't need these)
-**/node_modules/
-**/.next/
-**/__pycache__/
-**/venv/
-**/.venv/
+# Dependencies (Massive Token Drain)
+node_modules/
+package-lock.json
+pnpm-lock.yaml
 
-# EXCLUDE: Large data files (unless you need the AI to analyze the CSV structure)
-# data_dummy.csv
+# Python Environments & Cache
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Data Files (Do not index sample datasets)
+*.csv
+*.xlsx
+*.parquet
+*.pkl
+*.sqlite3
+data_dummy.csv
+
+# Docker & Media
+postgres_data/
+public/assets/
+*.png
+*.jpg
+*.pdf
+*.svg

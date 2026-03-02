@@ -1,0 +1,25 @@
+# Project: ARIMA Forecasting App
+- Role: Expert Full-Stack Developer (Next.js 16 + FastAPI)
+- Frameworks: React 19, Tailwind CSS 4, TypeScript 5
+- Logic: Pydantic v2, statsmodels (ADF), pmdarima (Auto ARIMA/SARIMA)
+
+# Token Efficiency Rules
+- BE CONCISE. Skip introductory fluff.
+- DO NOT REWRITE entire files. Use `// ... existing code` for context.
+- Use "Short Mode": Provide code immediately with minimal prose.
+
+# Frontend (Next.js 16 + React 19)
+- Use App Router and React Server Components (RSC) by default.
+- Tailwind 4: Use the new CSS-variable-first approach. Avoid legacy `tailwind.config.js`.
+- Charts: Use Recharts `ComposedChart` for time-series and CI 95% intervals.
+- Math: Always use `react-katex` for LaTeX formulas in the Modul section.
+
+# Backend (FastAPI + Data Science)
+- All endpoints must be `async def`.
+- Use Pydantic v2 schemas for all request/response validation.
+- Time Series: Ensure data has >= 6 rows for ARIMA and >= 24 for SARIMA.
+- Error Handling: Return 400 for CSV validation and 500 for model failures.
+
+# Multi-Container Strategy
+- Follow `docker-compose.yml` for the app-only version and `docker-compose.full.yml` for the teaching module.
+- Ensure Next.js is configured for `standalone` output in `next.config.ts`.
